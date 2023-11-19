@@ -1,0 +1,76 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                                   EA Last King  |
+//|                                    Developed by Forex Robot Easy Team |
+//|                                          Website: forexroboteasy.com |
+//+------------------------------------------------------------------+
+#property strict
+
+// Global variables
+int g_tradeVolume = 100;  // Trading volume for each trade
+double g_profitTarget = 0.01;  // Profit target per trade in percentage
+double g_stopLoss = 0.005;  // Stop loss per trade in percentage
+
+//+------------------------------------------------------------------+
+//|                            Helper Functions                       |
+//+------------------------------------------------------------------+
+// Function to calculate the profit based on trade volume and price movement
+double calculateProfit(double priceMovement) {
+   return priceMovement * g_tradeVolume;
+}
+
+// Function to open a trade
+void openTrade(int tradeType) {
+   int ticket = OrderSend(Symbol(), tradeType, g_tradeVolume, Ask, 0, Bid - g_stopLoss * Point, Bid + g_profitTarget * Point, 'LastKing', 0, 0, Green);
+   if (ticket > 0) {
+      Print('Trade opened successfully: Ticket =', ticket);
+   } else {
+      Print('Failed to open trade. Error code:', GetLastError());
+   }
+}
+
+// Function to close a trade
+void closeTrade(int ticket) {
+   if (OrderClose(ticket, g_tradeVolume, Bid, 0)) {
+      Print('Trade closed successfully: Ticket =', ticket);
+   } else {
+      Print('Failed to close trade. Error code:', GetLastError());
+   }
+}
+
+//+------------------------------------------------------------------+
+//|                           Expert Advisor                          |
+//+------------------------------------------------------------------+
+// Entry point of the expert advisor
+void OnTick() {
+   // Perform mathematical analysis to identify patterns and trends
+   // ...
+
+   // Check if the price is rising
+   if (/* price rising condition */) {
+      openTrade(OP_BUY);  // Open buy trade
+   }
+
+   // Check if the price is falling
+   if (/* price falling condition */) {
+      openTrade(OP_SELL);  // Open sell trade
+   }
+
+   // Check if any trades are open
+   int totalOrders = OrdersTotal();
+   if (totalOrders > 0) {
+      for (int i = totalOrders - 1; i >= 0; i--) {
+         if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+            // Check if the trade has reached the profit target
+            if (OrderProfit() >= g_profitTarget) {
+               closeTrade(OrderTicket());  // Close profitable trade
+            }
+
+            // Check if the trade has reached the stop loss
+            if (OrderProfit() <= -g_stopLoss) {
+               closeTrade(OrderTicket());  // Close losing trade
+            }
+         }
+      }
+   }
+}
